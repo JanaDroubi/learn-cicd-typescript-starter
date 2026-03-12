@@ -1,24 +1,42 @@
-name: CD
+name: CI/CD
 
 on:
   push:
-    branches: [main]
+    branches: [ main ]
 
 jobs:
-  Deploy:
+  build-and-push:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      # 1️⃣ Checkout code
+      - name: Checkout
+        uses: actions/checkout@v3
 
+      # 2️⃣ Setup Node.js
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v3
         with:
-          node-version: '22'
+          node-version: 20
 
+      # 3️⃣ Install dependencies
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
+      # 4️⃣ Build the app
       - name: Build app
         run: npm run build
+
+      # 5️⃣ Setup gcloud (fake service account)
+      - name: Setup gcloud CLI
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: fake-project-id
+          service_account_key: ${{ secrets.GCP_CREDENTIALS }}
+          export_default_credentials: true
+
+      # 6️⃣ Build Docker image (simulate)
+      - name: Build Docker image
+        run: |
+          echo "Skipping actual Docker push since no GCP project exists"
+          echo "Would run: gcloud builds submit --tag REGION-docker.pkg.dev/PROJECT_ID/REPOSITORY/IMAGE:TAG ."
