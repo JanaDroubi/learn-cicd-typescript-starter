@@ -83,3 +83,6 @@ This project is meant to help you learn and practice:
 
 Happy coding! 🚀
 
+Jana's version of Boot.dev's Notely app.
+# Extra comment
+# Temp note for new PR
