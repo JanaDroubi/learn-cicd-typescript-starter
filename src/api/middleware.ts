@@ -1,29 +1,19 @@
-import { Request, Response } from "express";
-import { respondWithError } from "./json.js";
-import { getUser } from "../db/queries/users.js";
-import { User } from "../db/schema.js";
-import { getAPIKey } from "./auth.js";
+import { Request, Response, NextFunction } from "express";
+import { getUserByEmail, User } from "../db/queries/users.js";
 
-export function middlewareAuth(
-  handler: (req: Request, res: Response, user: User) => void,
-) {
-  return async (req: Request, res: Response) => {
+export function middlewareAuth(handler: (req: Request, res: Response, user: User) => Promise<void> | void) {
+  return async function (req: Request, res: Response, next: NextFunction) {
     try {
-      const apiKey = getAPIKey(req.headers);
-      if (!apiKey) {
-        respondWithError(res, 401, "Couldn't find api key");
-        return;
-      }
+      const user = await getUserByEmail("test@example.com");
 
-      const user = await getUser(apiKey);
       if (!user) {
-        respondWithError(res, 404, "Couldn't get user");
+        res.status(401).send("Unauthorized");
         return;
       }
 
-      handler(req, res, user);
+      return handler(req, res, user);
     } catch (err) {
-      respondWithError(res, 500, "Couldn't authenticate user", err);
+      next(err);
     }
   };
 }

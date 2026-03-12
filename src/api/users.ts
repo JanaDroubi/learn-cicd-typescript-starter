@@ -1,14 +1,16 @@
 import { Request, Response } from "express";
-import crypto from "crypto"; // secure randomBytes
+import crypto from "crypto";
 import { v4 as uuidv4 } from "uuid";
 import { respondWithError, respondWithJSON } from "./json.js";
-import { createUser, getUserByEmail } from "../db/queries/users.js";
-import { User } from "../db/schema.js";
-
+import { createUser, getUserByEmail, User } from "../db/queries/users.js";
 /**
- * Handler to get user info
+ * Get current user info
  */
-export async function handlerUsersGet(req: Request, res: Response, user: User) {
+export async function handlerUsersGet(
+  req: Request,
+  res: Response,
+  user: User
+) {
   try {
     respondWithJSON(res, 200, user);
   } catch (err) {
@@ -17,13 +19,12 @@ export async function handlerUsersGet(req: Request, res: Response, user: User) {
 }
 
 /**
- * Handler to create a new user
+ * Create a new user
  */
 export async function handlerUsersCreate(req: Request, res: Response) {
   try {
     const { email, name } = req.body;
 
-    // Basic input validation
     if (
       !email ||
       !name ||
@@ -38,29 +39,23 @@ export async function handlerUsersCreate(req: Request, res: Response) {
     const trimmedEmail = email.trim();
     const trimmedName = name.trim();
 
-    // Check if user already exists
     const existingUser = await getUserByEmail(trimmedEmail);
     if (existingUser) {
       return respondWithError(res, 409, "User already exists");
     }
 
-    // Generate secure API key
-    const apiKey = crypto.randomBytes(32).toString("hex"); // secure replacement
-
-    // Generate user ID
+    const apiKey = crypto.randomBytes(32).toString("hex");
     const userId = uuidv4();
 
-    // Create the user in DB
     await createUser({
       id: userId,
-      email: trimmedEmail,
       name: trimmedName,
+      email: trimmedEmail,
       apiKey,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     });
 
-    // Retrieve created user
     const createdUser = await getUserByEmail(trimmedEmail);
 
     respondWithJSON(res, 201, createdUser);
