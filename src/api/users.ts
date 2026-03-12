@@ -2,41 +2,64 @@ import { Request, Response } from "express";
 import crypto from "crypto";
 import { v4 as uuidv4 } from "uuid";
 import { respondWithError, respondWithJSON } from "./json.js";
-import { createUser, getUser } from "../db/queries/users.js";
-import { User } from "../db/schema.js";
+import { createUser, getUserByEmail, User } from "../db/queries/users.js";
+/**
+ * Get current user info
+ */
+export async function handlerUsersGet(
+  req: Request,
+  res: Response,
+  user: User
+) {
+  try {
+    respondWithJSON(res, 200, user);
+  } catch (err) {
+    respondWithError(res, 500, "Couldn't retrieve user", err);
+  }
+}
 
+/**
+ * Create a new user
+ */
 export async function handlerUsersCreate(req: Request, res: Response) {
   try {
-    const { name } = req.body;
-    const apiKey = generateRandomSHA256Hash();
+    const { email, name } = req.body;
+
+    if (
+      !email ||
+      !name ||
+      typeof email !== "string" ||
+      typeof name !== "string" ||
+      email.trim() === "" ||
+      name.trim() === ""
+    ) {
+      return respondWithError(res, 400, "Invalid or missing fields");
+    }
+
+    const trimmedEmail = email.trim();
+    const trimmedName = name.trim();
+
+    const existingUser = await getUserByEmail(trimmedEmail);
+    if (existingUser) {
+      return respondWithError(res, 409, "User already exists");
+    }
+
+    const apiKey = crypto.randomBytes(32).toString("hex");
     const userId = uuidv4();
 
     await createUser({
       id: userId,
+      name: trimmedName,
+      email: trimmedEmail,
+      apiKey,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      name,
-      apiKey,
     });
-    const user = await getUser(apiKey);
-    if (user) {
-      respondWithJSON(res, 201, user);
-    } else {
-      respondWithError(res, 500, "Couldn't retrieve user");
-    }
+
+    const createdUser = await getUserByEmail(trimmedEmail);
+
+    respondWithJSON(res, 201, createdUser);
   } catch (err) {
     respondWithError(res, 500, "Couldn't create user", err);
   }
-}
-
-export async function handlerUsersGet(req: Request, res: Response, user: User) {
-  respondWithJSON(res, 200, user);
-}
-
-function generateRandomSHA256Hash(): string {
-  // should we be using crypto.randomBytes instead of crypto.pseudoRandomBytes?
-  return crypto
-    .createHash("sha256")
-    .update(crypto.pseudoRandomBytes(32))
-    .digest("hex");
 }
