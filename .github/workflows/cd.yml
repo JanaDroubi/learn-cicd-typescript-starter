@@ -1,42 +1,34 @@
-name: CI/CD
+name: CD
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
 
 jobs:
-  build-and-push:
+  deploy:
     runs-on: ubuntu-latest
-
     steps:
-      # 1️⃣ Checkout code
-      - name: Checkout
+      - name: Checkout repo
         uses: actions/checkout@v3
 
-      # 2️⃣ Setup Node.js
-      - name: Setup Node
+      - name: Set up Node
         uses: actions/setup-node@v3
         with:
-          node-version: 20
+          node-version: 18
 
-      # 3️⃣ Install dependencies
-      - name: Install dependencies
-        run: npm install
-
-      # 4️⃣ Build the app
-      - name: Build app
-        run: npm run build
-
-      # 5️⃣ Setup gcloud (fake service account)
-      - name: Setup gcloud CLI
-        uses: google-github-actions/setup-gcloud@v2
-        with:
-          project_id: fake-project-id
-          service_account_key: ${{ secrets.GCP_CREDENTIALS }}
-          export_default_credentials: true
-
-      # 6️⃣ Build Docker image (simulate)
-      - name: Build Docker image
+      - name: Install dependencies & build
         run: |
-          echo "Skipping actual Docker push since no GCP project exists"
-          echo "Would run: gcloud builds submit --tag REGION-docker.pkg.dev/PROJECT_ID/REPOSITORY/IMAGE:TAG ."
+          npm install
+          npm run build
+
+      - name: Authenticate with GCP
+        uses: google-github-actions/setup-gcloud@v1
+        with:
+          project_id: after-yesterday-490019-n8
+          service_account_key: ${{ secrets.GCP_CREDENTIALS }}
+
+      - name: Build and push Docker image
+        run: |
+          gcloud builds submit \
+            --tag us-central1-docker.pkg.dev/after-yesterday-490019-n8/notely-ar-repo/notely:latest .
