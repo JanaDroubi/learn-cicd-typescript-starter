@@ -8,6 +8,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
@@ -22,7 +23,8 @@ jobs:
           npm install
           npm run build
 
-      - name: Authenticate with GCP
+      # ⚡ Authenticate with GCP using the secret JSON key
+      - name: Authenticate to GCP
         uses: google-github-actions/setup-gcloud@v1
         with:
           project_id: after-yesterday-490019-n8
