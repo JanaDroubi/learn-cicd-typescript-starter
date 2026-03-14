@@ -82,9 +82,3 @@ This project is meant to help you learn and practice:
 * Automating quality checks in CI
 
 Happy coding! 🚀
-
-Jana's version of Boot.dev's Notely app.
-# Extra comment
-# Temp note for new PR
-\n## Temp section for PR trigger
-- This is just to make branch ahead again
