@@ -82,3 +82,4 @@ This project is meant to help you learn and practice:
 * Automating quality checks in CI
 
 Happy coding! 🚀
+# Trigger CD run
