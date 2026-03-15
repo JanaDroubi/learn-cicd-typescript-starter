@@ -1,9 +1,9 @@
 {
   "schema": "./src/db/schema.ts",
   "out": "./src/db/migrations",
-  "driver": "postgresql",
+  "driver": "pglite",
   "dbCredentials": {
-    "connectionString": "${DATABASE_URL}"
+    "url": "sqlite://:memory:"
   },
-  "dialect": "postgresql"
+  "dialect": "sqlite"
 }
